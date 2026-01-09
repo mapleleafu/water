@@ -11,5 +11,11 @@
       "src": "/(.*)",
       "dest": "src/main.ts"
     }
+  ],
+  "crons": [
+    {
+      "path": "/trigger-reminders",
+      "schedule": "0 */2 * * *"
+    }
   ]
 }

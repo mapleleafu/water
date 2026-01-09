@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Water Reminder</title>
+    <style>
+      body {
+        font-family: sans-serif;
+        text-align: center;
+        padding: 20px;
+        background: #f0f8ff;
+      }
+      input {
+        padding: 10px;
+        font-size: 16px;
+        width: 80%;
+        margin-bottom: 20px;
+      }
+      button {
+        padding: 15px 30px;
+        font-size: 18px;
+        background: #007bff;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        margin: 10px;
+        width: 100%;
+      }
+      button:disabled {
+        background: #ccc;
+      }
+      .hidden {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>💧 Water Reminder</h1>
+
+    <div id="auth-section">
+      <p>Enter the Secret Code:</p>
+      <input type="password" id="secret-code" placeholder="Secret Code" />
+      <button onclick="saveSecret()">Enter</button>
+    </div>
+
+    <div id="app-section" class="hidden">
+      <button onclick="subscribeUser()">🔔 Enable Notifications</button>
+      <br /><br />
+      <button onclick="logDrink()" style="background: #28a745">
+        🥤 I Drank Water
+      </button>
+      <p id="status"></p>
+    </div>
+
+    <script src="client.js"></script>
+  </body>
+</html>
