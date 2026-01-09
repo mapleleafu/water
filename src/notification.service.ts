@@ -21,7 +21,7 @@ export class NotificationService {
     const notificationPayload = JSON.stringify({
       title: 'Time to Hydrate! 💧',
       body: 'Drink a glass of water now.',
-      icon: '/icon.png', //TODO: add later
+      icon: '/icon.png',
     });
 
     const promises = subscriptions.map(async (sub) => {

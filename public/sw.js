@@ -3,7 +3,7 @@ self.addEventListener('push', function (event) {
 
   const options = {
     body: data.body,
-    icon: 'https://cdn-icons-png.flaticon.com/512/3105/3105807.png',
+    icon: 'icon.png',
     vibrate: [100, 50, 100],
     data: {
       dateOfArrival: Date.now(),
