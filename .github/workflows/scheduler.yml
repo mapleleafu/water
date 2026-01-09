@@ -1,0 +1,17 @@
+name: Water Reminder Trigger
+
+on:
+  schedule:
+    # Every 2 hours
+    - cron: '0 */2 * * *'
+  workflow_dispatch: # Allows manual triggering of the workflow
+
+jobs:
+  ping-vercel:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Water Reminder
+        run: |
+          curl -X GET "${{ secrets.APP_URL }}/trigger-reminders" \
+          -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+          --fail
