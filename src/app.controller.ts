@@ -158,6 +158,14 @@ export class AppController {
     return await this.notificationService.sendWaterReminders();
   }
 
+  @Get('force-reminders')
+  async forceReminders(@Headers('authorization') authHeader: string) {
+    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+      throw new UnauthorizedException('Invalid Cron Secret');
+    }
+    return await this.notificationService.sendWaterReminders(true);
+  }
+
   @Post('validate-app-secret')
   @UsePipes(new ValidationPipe())
   validateAppSecret(@Body() body: ValidateAppSecretDto) {

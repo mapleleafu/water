@@ -14,7 +14,7 @@ export class NotificationService {
     );
   }
 
-  async sendWaterReminders() {
+  async sendWaterReminders(disregardTime = false) {
     const subscriptions = await this.prisma.subscription.findMany({
       include: { user: true },
     });
@@ -34,7 +34,7 @@ export class NotificationService {
 
         const currentHour = parseInt(localTime, 10);
 
-        if (currentHour < 8 || currentHour > 22) {
+        if (currentHour < 8 || currentHour > 22 && !disregardTime) {
           this.logger.log(
             `Skipping ${sub.endpoint} - Local time is ${currentHour}:00 (Sleeping in ${timeZone})`,
           );
