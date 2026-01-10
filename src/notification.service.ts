@@ -56,10 +56,8 @@ export class NotificationService {
           sub as unknown as webPush.PushSubscription,
           notificationPayload,
           {
-            headers: {
-              Urgency: 'high', // Tells Android to wake up immediately
-            },
-            TTL: 60 * 60 * 24, // 1 day expiration (prevents old alerts if phone was off)
+            urgency: 'high',
+            TTL: 60 * 60 * 24,
           },
         );
 
