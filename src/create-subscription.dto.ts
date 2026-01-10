@@ -10,4 +10,8 @@ export class CreateSubscriptionDto {
     p256dh: string;
     auth: string;
   };
+
+  @IsString()
+  @IsNotEmpty()
+  timezone: string;
 }

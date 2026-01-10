@@ -10,6 +10,7 @@ model Subscription {
   id        String   @id @default(uuid())
   endpoint  String   @unique // The URL identifying the user's browser
   keys      Json // Stores auth and p256dh keys
+  timezone  String   @default("UTC")
   createdAt DateTime @default(now())
 }
 

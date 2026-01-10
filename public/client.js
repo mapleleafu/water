@@ -1,4 +1,5 @@
-const publicVapidKey = "BCKSc8wkr2vgE8J75qCAefS59G9b04rPWXRNoDo_81plcl-qa-CysG4mp7eCgYgJbi3316_tzCWkPMyMeKbDRCo";
+const publicVapidKey =
+  'BCKSc8wkr2vgE8J75qCAefS59G9b04rPWXRNoDo_81plcl-qa-CysG4mp7eCgYgJbi3316_tzCWkPMyMeKbDRCo';
 
 function urlBase64ToUint8Array(base64String) {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
@@ -27,6 +28,10 @@ if (localStorage.getItem('water-secret')) {
   document.getElementById('app-section').classList.remove('hidden');
 }
 
+function getLocalTimezone() {
+  return Intl.DateTimeFormat().resolvedOptions().timeZone;
+}
+
 async function subscribeUser() {
   if (!('serviceWorker' in navigator))
     return alert('No Service Worker support!');
@@ -42,14 +47,24 @@ async function subscribeUser() {
 
   await fetch('/subscribe', {
     method: 'POST',
-    body: JSON.stringify(subscription),
+    body: JSON.stringify({
+      endpoint: subscription.endpoint,
+      keys: subscription.toJSON().keys,
+      timezone: getLocalTimezone(),
+    }),
     headers: {
       'content-type': 'application/json',
       'x-api-key': localStorage.getItem('water-secret'),
     },
   });
 
-  alert('Subscribed!');
+  alert('Subscribed with Timezone: ' + getLocalTimezone());
+}
+
+async function updateTimezone() {
+  await subscribeUser();
+  document.getElementById('status').innerText =
+    'Timezone updated to ' + getLocalTimezone();
 }
 
 async function logDrink() {

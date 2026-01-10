@@ -24,13 +24,16 @@ export class AppController {
   @UseGuards(ApiKeyGuard)
   @UsePipes(new ValidationPipe())
   async subscribe(@Body() body: CreateSubscriptionDto) {
-    // Create new subscription or update existing one
     return this.prisma.subscription.upsert({
       where: { endpoint: body.endpoint },
-      update: { keys: body.keys },
+      update: {
+        keys: body.keys,
+        timezone: body.timezone,
+      },
       create: {
         endpoint: body.endpoint,
         keys: body.keys,
+        timezone: body.timezone,
       },
     });
   }

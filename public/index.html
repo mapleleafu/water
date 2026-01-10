@@ -4,17 +4,26 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Water Reminder</title>
-    <link rel="icon" type="image/png" href="/favicon/favicon-96x96.png" sizes="96x96" />
+    <link
+      rel="icon"
+      type="image/png"
+      href="/favicon/favicon-96x96.png"
+      sizes="96x96"
+    />
     <link rel="icon" type="image/svg+xml" href="/favicon/favicon.svg" />
     <link rel="shortcut icon" href="/favicon/favicon.ico" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png" />
+    <link
+      rel="apple-touch-icon"
+      sizes="180x180"
+      href="/favicon/apple-touch-icon.png"
+    />
     <link rel="manifest" href="/favicon/site.webmanifest" />
     <style>
       body {
         font-family: sans-serif;
         text-align: center;
         padding: 20px;
-        background: #f0f8ff;
+        background: #000;
       }
       input {
         padding: 10px;
@@ -39,10 +48,13 @@
       .hidden {
         display: none;
       }
+      #status {
+        color: #fff;
+      }
     </style>
   </head>
   <body>
-    <h1>💧 Water Reminder</h1>
+    <h1 style="color: #fff;">💧 Water Reminder</h1>
 
     <div id="auth-section">
       <p>Enter the Secret Code:</p>
@@ -52,6 +64,12 @@
 
     <div id="app-section" class="hidden">
       <button onclick="subscribeUser()">🔔 Enable Notifications</button>
+      <button
+        onclick="updateTimezone()"
+        style="background: #17a2b8; margin-top: 5px"
+      >
+        🌍 Sync Timezone
+      </button>
       <br /><br />
       <button onclick="logDrink()" style="background: #28a745">
         🥤 I Drank Water
