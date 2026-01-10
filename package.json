@@ -6,7 +6,7 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
-    "postinstall": "prisma generate",
+    "postinstall": "prisma generate && if [ -n \"$VERCEL\" ]; then DATABASE_URL=\"$DIRECT_URL\" npx prisma migrate deploy; fi",
     "build": "nest build && mkdir -p dist/public && cp -r src/public/* dist/public/",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
