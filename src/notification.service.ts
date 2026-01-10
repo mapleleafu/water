@@ -52,10 +52,15 @@ export class NotificationService {
           ],
         });
 
-        // Cast to any for webPush since Prisma Json type might not match PushSubscription exactly
         await webPush.sendNotification(
           sub as unknown as webPush.PushSubscription,
           notificationPayload,
+          {
+            headers: {
+              Urgency: 'high', // Tells Android to wake up immediately
+            },
+            TTL: 60 * 60 * 24, // 1 day expiration (prevents old alerts if phone was off)
+          },
         );
 
         this.logger.log(
