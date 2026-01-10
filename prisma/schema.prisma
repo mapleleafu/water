@@ -6,15 +6,30 @@ datasource db {
   provider = "postgresql"
 }
 
+model User {
+  id            String         @id @default(uuid())
+  name          String         @unique
+  createdAt     DateTime       @default(now())
+  subscriptions Subscription[]
+  drinkLogs     DrinkLog[]
+}
+
 model Subscription {
   id        String   @id @default(uuid())
   endpoint  String   @unique // The URL identifying the user's browser
   keys      Json // Stores auth and p256dh keys
   timezone  String   @default("UTC")
   createdAt DateTime @default(now())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model DrinkLog {
   id        Int      @id @default(autoincrement())
   timestamp DateTime @default(now())
+  amount    Int      @default(250) // Volume in ml
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

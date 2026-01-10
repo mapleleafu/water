@@ -14,4 +14,8 @@ export class CreateSubscriptionDto {
   @IsString()
   @IsNotEmpty()
   timezone: string;
+
+  @IsString()
+  @IsNotEmpty()
+  userId: string;
 }

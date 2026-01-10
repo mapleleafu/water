@@ -7,7 +7,7 @@
   "license": "UNLICENSED",
   "scripts": {
     "postinstall": "prisma generate && if [ -n \"$VERCEL\" ]; then DATABASE_URL=\"$DIRECT_URL\" npx prisma migrate deploy; fi",
-    "build": "nest build && mkdir -p dist/public && cp -r src/public/* dist/public/",
+    "build": "nest build && mkdir -p dist/public && cp -r public/* dist/public/",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "dev": "nest start --watch",
@@ -46,6 +46,7 @@
     "@types/express": "^5.0.0",
     "@types/jest": "^30.0.0",
     "@types/node": "^22.10.7",
+    "@types/pg": "^8.16.0",
     "@types/supertest": "^6.0.2",
     "@types/web-push": "^3.6.4",
     "eslint": "^9.18.0",
