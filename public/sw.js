@@ -15,6 +15,10 @@ self.addEventListener('push', function (event) {
     vibrate: [100, 50, 100],
     data: data.data,
     actions: data.actions,
+    timestamp: Date.now(),
+    requireInteraction: true,
+    tag: 'water-reminder',
+    renotify: true,
   };
 
   event.waitUntil(self.registration.showNotification(data.title, options));
