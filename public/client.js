@@ -2,6 +2,7 @@ const publicVapidKey =
   'BCKSc8wkr2vgE8J75qCAefS59G9b04rPWXRNoDo_81plcl-qa-CysG4mp7eCgYgJbi3316_tzCWkPMyMeKbDRCo';
 
 let goalReachedToday = false;
+let allTimezones = [];
 
 // --- Utils ---
 function urlBase64ToUint8Array(base64String) {
@@ -24,6 +25,30 @@ function getHeaders() {
   };
 }
 
+function showToast(
+  message,
+  type = 'info',
+  clickable = false,
+  onClick = null,
+  duration = 3000,
+) {
+  const container = document.getElementById('toast-container');
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.innerText = message;
+  container.appendChild(toast);
+
+  if (clickable && onClick) {
+    toast.style.cursor = 'pointer';
+    toast.onclick = onClick;
+  }
+
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    setTimeout(() => toast.remove(), duration / 10);
+  }, duration);
+}
+
 // --- Auth & State ---
 function init() {
   const secret = localStorage.getItem('water-secret');
@@ -38,8 +63,39 @@ function init() {
   } else {
     showSection('app-section');
     document.getElementById('welcome-msg').innerText = `Hello, ${userName}!`;
+
+    checkAndSyncTimezone(true);
     startCountdown();
     fetchStats();
+  }
+}
+
+function checkAndSyncTimezone(autoSync = false) {
+  const storedTz = localStorage.getItem('water-timezone');
+  const currentBrowserTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+  if (autoSync && storedTz && storedTz !== currentBrowserTz) {
+    subscribeUser(currentBrowserTz, true).then(() => {
+      showToast(
+        `✅ Travel detected! Timezone synced to ${currentBrowserTz}. Click to update manually.`,
+        'success',
+        true,
+        openTimezoneModal,
+      );
+      updateCurrentTimezoneLabel();
+    });
+  } else if (!autoSync) {
+    subscribeUser(currentBrowserTz, true).then(() => {
+      showToast(
+        `✅ Timezone synced to ${currentBrowserTz}. Click to update manually.`,
+        'success',
+        true,
+        openTimezoneModal,
+      );
+    });
+    updateCurrentTimezoneLabel();
+  } else {
+    updateCurrentTimezoneLabel();
   }
 }
 
@@ -65,10 +121,10 @@ async function saveSecret() {
       localStorage.setItem('water-secret', secret);
       init();
     } else {
-      alert('Invalid Secret Code. Please try again.');
+      showToast('Invalid Secret Code. Please try again.', 'error');
     }
   } catch (err) {
-    alert('Server error. Please try again later.');
+    showToast('Server error. Please try again later.', 'error');
   }
 }
 
@@ -110,7 +166,7 @@ async function fetchUsers() {
 
 async function createUser() {
   const name = document.getElementById('new-username').value;
-  if (!name) return alert('Enter a name');
+  if (!name) return showToast('Enter a name', 'error');
 
   try {
     const res = await fetch('/users', {
@@ -120,14 +176,14 @@ async function createUser() {
     });
 
     if (res.status === 409) {
-      return alert('Username already taken. Please choose another one.');
+      return showToast('Username already taken.', 'error');
     }
 
     if (!res.ok) throw new Error('Create user failed');
     const user = await res.json();
     selectUser(user.id, user.name);
   } catch (err) {
-    alert('Failed to create user');
+    showToast('Failed to create user', 'error');
   }
 }
 
@@ -137,9 +193,11 @@ function selectUser(id, name) {
   init();
 }
 
-async function subscribeUser() {
-  if (!('serviceWorker' in navigator))
-    return alert('No Service Worker support!');
+async function subscribeUser(customTimezone = null, silent = false) {
+  if (!('serviceWorker' in navigator)) {
+    if (!silent) showToast('No Service Worker support!', 'error');
+    return;
+  }
 
   try {
     const register = await navigator.serviceWorker.register('/sw.js', {
@@ -151,27 +209,41 @@ async function subscribeUser() {
       applicationServerKey: urlBase64ToUint8Array(publicVapidKey),
     });
 
+    // Use custom timezone or fallback to stored or detected
+    let timezone =
+      customTimezone ||
+      localStorage.getItem('water-timezone') ||
+      Intl.DateTimeFormat().resolvedOptions().timeZone;
+
     const res = await fetch('/subscribe', {
       method: 'POST',
       body: JSON.stringify({
         endpoint: subscription.endpoint,
         keys: subscription.toJSON().keys,
-        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        timezone: timezone,
         userId: localStorage.getItem('water-user-id'),
       }),
       headers: getHeaders(),
     });
 
     if (res.status === 404) {
-      alert('User session expired. Please re-select your profile.');
+      if (!silent)
+        showToast(
+          'User session expired. Please re-select your profile.',
+          'error',
+        );
       switchUser();
       return;
     }
 
-    document.getElementById('status').innerText = '✅ Reminders enabled!';
+    // Save preference if successful
+    localStorage.setItem('water-timezone', timezone);
+    updateCurrentTimezoneLabel();
+
+    if (!silent) showToast('✅ Reminders enabled!', 'success');
   } catch (err) {
     console.error('Subscription failed', err);
-    alert('Failed to enable notifications.');
+    if (!silent) showToast('Failed to enable notifications.', 'error');
   }
 }
 
@@ -187,14 +259,13 @@ async function logDrink() {
   });
 
   if (res.ok) {
-    document.getElementById('status').innerText =
-      `Logged ${amount}ml at ${new Date().toLocaleTimeString()}`;
+    showToast(`Logged ${amount}ml`, 'success');
     fetchStats();
   } else if (res.status === 404) {
-    alert('User not found. Please re-select your profile.');
+    showToast('User not found. Please re-select.', 'error');
     switchUser();
   } else {
-    alert('Failed to log drink.');
+    showToast('Failed to log drink.', 'error');
   }
 }
 
@@ -254,22 +325,109 @@ async function fetchStats() {
   }
 }
 
-function manualTimezoneChange() {
-  const newTimezone = prompt(
-    'Enter your timezone (e.g., Australia/Sydney):',
-    Intl.DateTimeFormat().resolvedOptions().timeZone,
-  );
-  if (newTimezone) {
-    localStorage.setItem('water-timezone', newTimezone);
-    document.getElementById('timeZoneStatus').innerText =
-      `🌍 Time synced as ${newTimezone}. Click to change timezone`;
+// --- Timezone Management ---
+function renderTimezoneOptions(list) {
+  const select = document.getElementById('timezone-select');
+  const noResults = document.getElementById('no-tz-results');
+  select.innerHTML = '';
+
+  if (list.length === 0) {
+    select.classList.add('hidden');
+    noResults.classList.remove('hidden');
+    return;
   }
+
+  select.classList.remove('hidden');
+  noResults.classList.add('hidden');
+
+  const current =
+    localStorage.getItem('water-timezone') ||
+    Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+  list.forEach((tz) => {
+    const opt = document.createElement('option');
+    opt.value = tz;
+    opt.innerText = tz.replace(/_/g, ' ');
+    if (tz === current) opt.selected = true;
+    select.appendChild(opt);
+  });
 }
 
-async function updateTimezone() {
-  await subscribeUser();
-  document.getElementById('timeZoneStatus').innerText =
-    `🌍 Time synced as ${Intl.DateTimeFormat().resolvedOptions().timeZone}. Click to change timezone`;
+function filterTimezones() {
+  const query = document.getElementById('timezone-search').value.toLowerCase();
+  const filtered = allTimezones.filter((tz) =>
+    tz.toLowerCase().includes(query),
+  );
+  renderTimezoneOptions(filtered);
+}
+
+function openTimezoneModal() {
+  const modal = document.getElementById('timezone-modal');
+  modal.classList.remove('hidden');
+
+  document.getElementById('timezone-search').value = '';
+
+  if (allTimezones.length === 0) {
+    let timezones = [];
+    try {
+      timezones = Intl.supportedValuesOf('timeZone');
+    } catch (e) {
+      console.warn('Intl not supported, using fallback');
+    }
+
+    if (!timezones || timezones.length === 0) {
+      timezones = [
+        'UTC',
+        'America/New_York',
+        'America/Los_Angeles',
+        'America/Chicago',
+        'America/Toronto',
+        'America/Sao_Paulo',
+        'Europe/London',
+        'Europe/Paris',
+        'Europe/Berlin',
+        'Europe/Madrid',
+        'Europe/Istanbul',
+        'Europe/Moscow',
+        'Asia/Tokyo',
+        'Asia/Shanghai',
+        'Asia/Singapore',
+        'Asia/Dubai',
+        'Asia/Kolkata',
+        'Australia/Sydney',
+        'Pacific/Auckland',
+      ];
+    }
+    allTimezones = timezones;
+  }
+
+  renderTimezoneOptions(allTimezones);
+}
+
+function closeTimezoneModal() {
+  document.getElementById('timezone-modal').classList.add('hidden');
+}
+
+async function saveTimezone() {
+  const select = document.getElementById('timezone-select');
+  const newTz = select.value;
+  if (!newTz) return;
+
+  closeTimezoneModal();
+  await subscribeUser(newTz, true).then(() => {
+    showToast(`✅ Timezone updated to ${newTz}`, 'success');
+  });
+}
+
+function updateCurrentTimezoneLabel() {
+  const current =
+    localStorage.getItem('water-timezone') ||
+    Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const label = document.getElementById('current-timezone-label');
+  if (label) {
+    const short = current.split('/').pop().replace(/_/g, ' ');
+    label.innerText = short;
+  }
 }
 
 function startCountdown() {
