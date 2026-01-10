@@ -49,6 +49,18 @@ function showToast(
   }, duration);
 }
 
+if ('serviceWorker' in navigator) {
+  let refreshing = false;
+  // Listen for the "controllerchange" event, which happens
+  // when the new Service Worker calls clients.claim()
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!refreshing) {
+      refreshing = true;
+      window.location.reload();
+    }
+  });
+}
+
 // --- Auth & State ---
 function init() {
   const secret = localStorage.getItem('water-secret');
