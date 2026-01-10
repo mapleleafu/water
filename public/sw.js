@@ -29,7 +29,7 @@ self.addEventListener('notificationclick', function (event) {
 
   // User clicked "I Drank It"
   if (event.action === 'drink') {
-    const secret = event.notification.data.secret;
+    const { secret, userId } = event.notification.data;
 
     const promiseChain = fetch('/log-drink', {
       method: 'POST',
@@ -37,6 +37,10 @@ self.addEventListener('notificationclick', function (event) {
         'content-type': 'application/json',
         'x-api-key': secret,
       },
+      body: JSON.stringify({
+        userId: userId,
+        amount: 250,
+      }),
     });
 
     event.waitUntil(promiseChain);

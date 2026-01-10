@@ -34,9 +34,21 @@ export class NotificationService {
 
         const currentHour = parseInt(localTime, 10);
 
-        if (!disregardTime && (currentHour < 8 || currentHour > 22)) {
+        if (sub.mutedUntil && new Date() < new Date(sub.mutedUntil)) {
           this.logger.log(
-            `Skipping ${sub.endpoint} - Local time is ${currentHour}:00 (Sleeping in ${timeZone})`,
+            `Skipping ${sub.endpoint} - Muted until ${sub.mutedUntil}`,
+          );
+          return;
+        }
+
+        // Check quiet hours
+        const isQuiet = sub.quietStart > sub.quietEnd
+          ? (currentHour >= sub.quietStart || currentHour < sub.quietEnd) // e.g. 22 to 8
+          : (currentHour >= sub.quietStart && currentHour < sub.quietEnd); // e.g. 8 to 22 (unlikely but possible)
+
+        if (!disregardTime && isQuiet) {
+          this.logger.log(
+            `Skipping ${sub.endpoint} - Local time is ${currentHour}:00 (Quiet hours: ${sub.quietStart}-${sub.quietEnd} in ${timeZone})`,
           );
           return;
         }
@@ -45,11 +57,11 @@ export class NotificationService {
           title: `Time to Hydrate, ${sub.user.name}! 💧`,
           body: 'Drink a glass of water now.',
           icon: '/icon.png',
-          data: { secret: process.env.APP_SECRET },
-          actions: [
-            { action: 'drink', title: '✅ I Drank It' },
-            { action: 'close', title: '❌ Snooze' },
-          ],
+          data: { 
+            secret: process.env.APP_SECRET,
+            userId: sub.user.id
+          },
+          actions: [{ action: 'drink', title: '✅ I Drank It' }],
         });
 
         await webPush.sendNotification(

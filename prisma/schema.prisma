@@ -15,11 +15,14 @@ model User {
 }
 
 model Subscription {
-  id        String   @id @default(uuid())
-  endpoint  String   @unique // The URL identifying the user's browser
-  keys      Json // Stores auth and p256dh keys
-  timezone  String   @default("UTC")
-  createdAt DateTime @default(now())
+  id         String    @id @default(uuid())
+  endpoint   String    @unique // The URL identifying the user's browser
+  keys       Json // Stores auth and p256dh keys
+  timezone   String    @default("UTC")
+  mutedUntil DateTime?
+  quietStart Int       @default(22) // 10 PM
+  quietEnd   Int       @default(8) // 8 AM
+  createdAt  DateTime  @default(now())
 
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)

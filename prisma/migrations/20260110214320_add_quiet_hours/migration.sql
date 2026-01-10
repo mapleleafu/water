@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "Subscription" ADD COLUMN     "quietEnd" INTEGER NOT NULL DEFAULT 8,
+ADD COLUMN     "quietStart" INTEGER NOT NULL DEFAULT 22;
