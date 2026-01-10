@@ -34,7 +34,7 @@ export class NotificationService {
 
         const currentHour = parseInt(localTime, 10);
 
-        if (currentHour < 8 || currentHour > 22 && !disregardTime) {
+        if (!disregardTime && (currentHour < 8 || currentHour > 22)) {
           this.logger.log(
             `Skipping ${sub.endpoint} - Local time is ${currentHour}:00 (Sleeping in ${timeZone})`,
           );
