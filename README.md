@@ -1,98 +1,95 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# 💧 Water
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+> A personal water intake tracker with smart push notifications.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Overview
 
-## Description
+Water is a full-stack Progressive Web App (PWA) designed to keep your hydration habits on track. It leverages the Web Push Protocol to send actionable reminders directly to your device during your waking hours, ensuring you never miss a glass.
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+### 📸 Interface
 
-## Project setup
+<div align="center">
+  <img src="public/readme/ui.png" alt="Application UI" width="80%" />
+  <p><em>Minimalist interface for quick logging</em></p>
+  
+  <br />
 
-```bash
-$ npm install
+  <img src="public/readme/notification.png" alt="Push Notification" width="300" />
+  <p><em>Interactive notifications for one-tap logging</em></p>
+</div>
+
+---
+
+## ✨ Key Features
+
+- **Smart Reminders:** Push notifications sent via VAPID protocol.
+- **Timezone Aware:** Respects your sleep schedule—alerts only active 8 AM - 10 PM (user's local time/customizable).
+- **Interactive Actions:** Log water directly from the notification without opening the app.
+- **PWA Ready:** Install on iOS, Android, or Desktop for a native app experience.
+- **Automated:** Background jobs powered by GitHub Actions.
+
+## 🛠️ Tech Stack
+
+| Component    | Technology          |
+| :----------- | :------------------ |
+| **Backend**  | NestJS              |
+| **Database** | PostgreSQL + Prisma |
+| **Frontend** | Vanilla JS (PWA)    |
+| **Deploy**   | Vercel              |
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Node.js (v18+)
+- PostgreSQL Database
+- VAPID Keys (for push notifications)
+
+### 1. Setup Environment
+
+Create a `.env` file in the root directory:
+
+```env
+DATABASE_URL="postgresql://user:pass@localhost:5432/water"
+APP_SECRET="super_secret_key"
+CRON_SECRET="scheduler_secret_key"
+
+# Web Push Keys
+VAPID_PUBLIC="your_public_key"
+VAPID_PRIVATE="your_private_key"
+VAPID_SUBJECT="mailto:admin@example.com"
 ```
 
-## Compile and run the project
+### 2. Installation
 
 ```bash
-# development
-$ npm run start
+# Clone the repo
+git clone https://github.com/mapleleafu/water.git
+cd water
 
-# watch mode
-$ npm run start:dev
+# Install dependencies
+npm install
 
-# production mode
-$ npm run start:prod
+# Setup database
+npx prisma migrate dev
 ```
 
-## Run tests
+### 3. Run Application
 
 ```bash
-# unit tests
-$ npm run test
+# Start development server
+npm run dev
 
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+# Build for production
+npm run build
+npm run start:prod
 ```
 
-## Deployment
+## 🤖 Automation
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+Reminders are triggered via an external scheduler to keep the app resource-efficient.
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+- **Workflow:** `.github/workflows/scheduler.yml`
+- **Trigger:** Calls `/trigger-reminders` every 2 hours.
 
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
-```
-
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+---
