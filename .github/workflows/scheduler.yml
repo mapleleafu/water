@@ -4,7 +4,7 @@ on:
   schedule:
     # Every 2 hours
     - cron: '0 */2 * * *'
-  workflow_dispatch: # Allows manual triggering of the workflow
+  workflow_dispatch: # Allows manual testing
 
 jobs:
   ping-vercel:
@@ -12,6 +12,8 @@ jobs:
     steps:
       - name: Trigger Water Reminder
         run: |
-          curl -X GET "${{ secrets.APP_URL }}/trigger-reminders" \
-          -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
-          --fail
+          curl -L -v \
+            -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" \
+            "${{ secrets.APP_URL }}/trigger-reminders" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            --fail
