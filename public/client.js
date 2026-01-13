@@ -84,7 +84,42 @@ function init() {
     startCountdown();
     fetchStats();
     populateQuietHourSelects();
+    initDrinkSizes();
   }
+}
+
+function initDrinkSizes() {
+  const select = document.getElementById('drink-amount');
+  const defaults = [100, 250, 500];
+  const custom = JSON.parse(localStorage.getItem('water-custom-sizes') || '[]');
+  const all = [...new Set([...defaults, ...custom])].sort((a,b) => a-b);
+  
+  select.innerHTML = '';
+  all.forEach(size => {
+    const opt = new Option(`${size}ml`, size);
+    if (size === 250) opt.selected = true;
+    select.add(opt);
+  });
+  
+  select.add(new Option('➕ Add Size...', 'custom'));
+  
+  select.onchange = () => {
+    if (select.value === 'custom') {
+      const val = prompt('Enter amount in ml:');
+      const num = parseInt(val);
+      if (num > 0) {
+        const custom = JSON.parse(localStorage.getItem('water-custom-sizes') || '[]');
+        if (!custom.includes(num)) {
+            custom.push(num);
+            localStorage.setItem('water-custom-sizes', JSON.stringify(custom));
+        }
+        initDrinkSizes();
+        select.value = num;
+      } else {
+        select.value = 250; // Reset
+      }
+    }
+  };
 }
 
 function populateQuietHourSelects() {
@@ -238,6 +273,17 @@ async function subscribeUser(customTimezone = null, silent = false) {
 async function logDrink() {
   const amount = parseInt(document.getElementById('drink-amount').value);
   const userId = localStorage.getItem('water-user-id');
+
+  // Optimistic Update
+  const totalEl = document.getElementById('today-total');
+  const fillEl = document.getElementById('water-fill');
+  const previousTotal = parseInt(totalEl.innerText || '0');
+  const previousHeight = fillEl.style.height;
+
+  const newTotal = previousTotal + amount;
+  totalEl.innerText = newTotal;
+  fillEl.style.height = `${Math.min((newTotal / 2000) * 100, 100)}%`;
+
   try {
     const res = await fetch('/log-drink', {
       method: 'POST',
@@ -249,12 +295,17 @@ async function logDrink() {
       fetchStats();
     } else throw new Error();
   } catch (err) {
-    const queue = JSON.parse(localStorage.getItem('water-offline-queue') || '[]');
-    queue.push({ userId, amount, timestamp: Date.now() });
-    localStorage.setItem('water-offline-queue', JSON.stringify(queue));
-    const cur = parseInt(document.getElementById('today-total').innerText || '0');
-    document.getElementById('today-total').innerText = cur + amount;
-    showToast(`Offline. Logged ${amount}ml locally.`, 'info');
+    if (!navigator.onLine) {
+      const queue = JSON.parse(localStorage.getItem('water-offline-queue') || '[]');
+      queue.push({ userId, amount, timestamp: Date.now() });
+      localStorage.setItem('water-offline-queue', JSON.stringify(queue));
+      showToast(`Offline. Logged ${amount}ml locally.`, 'info');
+    } else {
+      // Revert on error
+      totalEl.innerText = previousTotal;
+      fillEl.style.height = previousHeight;
+      showToast('Failed to log drink.', 'error');
+    }
   }
 }
 
@@ -359,14 +410,36 @@ async function openDayDetailModal(date) {
             logsContainer.innerHTML = '<p style="color:var(--muted)">No drinks logged this day.</p>';
         } else {
             logsContainer.innerHTML = logs.map(log => `
-                <div style="display:flex; justify-content:space-between; padding:12px; border-bottom:1px solid var(--border)">
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:12px; border-bottom:1px solid var(--border)">
                     <span>${new Date(log.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
-                    <span style="font-weight:bold; color:var(--primary)">${log.amount}ml</span>
+                    <div style="display:flex; gap:10px; align-items:center;">
+                        <span style="font-weight:bold; color:var(--primary)">${log.amount}ml</span>
+                        <button onclick="deleteLogEntry(${log.id}, '${date}')" style="background:none; border:none; color:var(--danger); cursor:pointer; padding:4px; font-size:16px;">🗑</button>
+                    </div>
                 </div>
             `).join('');
         }
     } catch (e) {
         logsContainer.innerHTML = 'Error loading details.';
+    }
+}
+
+async function deleteLogEntry(id, date) {
+    if (!confirm('Delete this log?')) return;
+    try {
+        const res = await fetch(`/log-drink/${id}`, {
+            method: 'DELETE',
+            headers: getHeaders()
+        });
+        if (res.ok) {
+            showToast('Log deleted', 'success');
+            openDayDetailModal(date); // Refresh modal
+            fetchStats(); // Refresh stats
+        } else {
+            showToast('Failed to delete', 'error');
+        }
+    } catch (e) {
+        showToast('Error deleting', 'error');
     }
 }
 

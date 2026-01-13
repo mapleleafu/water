@@ -1,6 +1,7 @@
 import {
   Get,
   Post,
+  Delete,
   Body,
   Controller,
   UseGuards,
@@ -63,7 +64,9 @@ export class AppController {
   @UseGuards(ApiKeyGuard)
   @UsePipes(new ValidationPipe())
   async muteReminders(@Body() body: MuteRemindersDto) {
-    const user = await this.prisma.user.findUnique({ where: { id: body.userId } });
+    const user = await this.prisma.user.findUnique({
+      where: { id: body.userId },
+    });
     if (!user) throw new NotFoundException('User not found');
 
     const until = new Date();
@@ -81,7 +84,9 @@ export class AppController {
   @UseGuards(ApiKeyGuard)
   @UsePipes(new ValidationPipe())
   async updatePreferences(@Body() body: UpdatePreferencesDto) {
-    const user = await this.prisma.user.findUnique({ where: { id: body.userId } });
+    const user = await this.prisma.user.findUnique({
+      where: { id: body.userId },
+    });
     if (!user) throw new NotFoundException('User not found');
 
     await this.prisma.subscription.updateMany({
@@ -101,14 +106,14 @@ export class AppController {
     @Param('userId') userId: string,
     @Query('goal') goalQuery?: string,
   ) {
-    const user = await this.prisma.user.findUnique({ 
+    const user = await this.prisma.user.findUnique({
       where: { id: userId },
       include: {
         subscriptions: {
           take: 1,
-          orderBy: { createdAt: 'desc' }
-        }
-      }
+          orderBy: { createdAt: 'desc' },
+        },
+      },
     });
     if (!user) throw new NotFoundException('User not found');
 
@@ -126,7 +131,7 @@ export class AppController {
       },
       orderBy: { timestamp: 'asc' },
     });
-    
+
     const totalLogs = await this.prisma.drinkLog.count({ where: { userId } });
 
     const history: Record<string, number> = {};
@@ -173,7 +178,7 @@ export class AppController {
         longestStreak = Math.max(longestStreak, tempStreak);
         tempStreak = 0;
       }
-      
+
       if (amount > 0) totalDaysTracked++;
 
       heatmapData.push({ date: ds, amount, met });
@@ -198,17 +203,17 @@ export class AppController {
       d.setDate(now.getDate() - 1);
       const prevStr = d.toISOString().split('T')[0];
       if ((history[prevStr] || 0) >= goal) {
-         currentStreak = 0;
-         for (let i = 1; i < 90; i++) {
-            const d2 = new Date();
-            d2.setDate(now.getDate() - i);
-            const ds = d2.toISOString().split('T')[0];
-            if ((history[ds] || 0) >= goal) {
-              currentStreak++;
-            } else {
-              break;
-            }
-         }
+        currentStreak = 0;
+        for (let i = 1; i < 90; i++) {
+          const d2 = new Date();
+          d2.setDate(now.getDate() - i);
+          const ds = d2.toISOString().split('T')[0];
+          if ((history[ds] || 0) >= goal) {
+            currentStreak++;
+          } else {
+            break;
+          }
+        }
       } else {
         currentStreak = 0;
       }
@@ -225,8 +230,11 @@ export class AppController {
         amount: history[ds] || 0,
       });
     }
-    
-    const average = totalDaysTracked > 0 ? Object.values(history).reduce((a,b) => a+b, 0) / totalDaysTracked : 0;
+
+    const average =
+      totalDaysTracked > 0
+        ? Object.values(history).reduce((a, b) => a + b, 0) / totalDaysTracked
+        : 0;
 
     return {
       todayTotal,
@@ -237,11 +245,16 @@ export class AppController {
       averageDaily: Math.round(average),
       history: weeklyGraph,
       heatmap: heatmapData,
-      hourly: Object.entries(hourly).map(([h, v]) => ({ hour: parseInt(h), amount: v })),
-      preferences: user.subscriptions[0] ? {
-        quietStart: user.subscriptions[0].quietStart,
-        quietEnd: user.subscriptions[0].quietEnd,
-      } : { quietStart: 22, quietEnd: 8 }
+      hourly: Object.entries(hourly).map(([h, v]) => ({
+        hour: parseInt(h),
+        amount: v,
+      })),
+      preferences: user.subscriptions[0]
+        ? {
+            quietStart: user.subscriptions[0].quietStart,
+            quietEnd: user.subscriptions[0].quietEnd,
+          }
+        : { quietStart: 22, quietEnd: 8 },
     };
   }
 
@@ -312,6 +325,19 @@ export class AppController {
         user: { connect: { id: body.userId } },
       },
     });
+  }
+
+  @Delete('log-drink/:id')
+  @UseGuards(ApiKeyGuard)
+  async deleteLog(@Param('id') id: string) {
+    try {
+      await this.prisma.drinkLog.delete({
+        where: { id: parseInt(id, 10) },
+      });
+      return { success: true };
+    } catch {
+      throw new NotFoundException('Log not found');
+    }
   }
 
   @Get('trigger-reminders')

@@ -28,7 +28,8 @@ self.addEventListener('notificationclick', function (event) {
   event.notification.close();
 
   // User clicked "I Drank It"
-  if (event.action === 'drink') {
+  if (event.action && event.action.startsWith('drink-')) {
+    const amount = parseInt(event.action.split('-')[1], 10);
     const { secret, userId } = event.notification.data;
 
     const promiseChain = fetch('/log-drink', {
@@ -39,7 +40,7 @@ self.addEventListener('notificationclick', function (event) {
       },
       body: JSON.stringify({
         userId: userId,
-        amount: 250,
+        amount: amount,
       }),
     });
 

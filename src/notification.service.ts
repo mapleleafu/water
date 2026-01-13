@@ -36,15 +36,16 @@ export class NotificationService {
 
         if (sub.mutedUntil && new Date() < new Date(sub.mutedUntil)) {
           this.logger.log(
-            `Skipping ${sub.endpoint} - Muted until ${sub.mutedUntil}`,
+            `Skipping ${sub.endpoint} - Muted until ${sub.mutedUntil.toISOString()}`,
           );
           return;
         }
 
         // Check quiet hours
-        const isQuiet = sub.quietStart > sub.quietEnd
-          ? (currentHour >= sub.quietStart || currentHour < sub.quietEnd) // e.g. 22 to 8
-          : (currentHour >= sub.quietStart && currentHour < sub.quietEnd); // e.g. 8 to 22 (unlikely but possible)
+        const isQuiet =
+          sub.quietStart > sub.quietEnd
+            ? currentHour >= sub.quietStart || currentHour < sub.quietEnd // e.g. 22 to 8
+            : currentHour >= sub.quietStart && currentHour < sub.quietEnd; // e.g. 8 to 22 (unlikely but possible)
 
         if (!disregardTime && isQuiet) {
           this.logger.log(
@@ -57,11 +58,14 @@ export class NotificationService {
           title: `Time to Hydrate, ${sub.user.name}! 💧`,
           body: 'Drink a glass of water now.',
           icon: '/icon.png',
-          data: { 
+          data: {
             secret: process.env.APP_SECRET,
-            userId: sub.user.id
+            userId: sub.user.id,
           },
-          actions: [{ action: 'drink', title: '✅ I Drank It' }],
+          actions: [
+            { action: 'drink-250', title: '💧 250ml' },
+            { action: 'drink-500', title: '💧 500ml' },
+          ],
         });
 
         await webPush.sendNotification(
