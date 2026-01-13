@@ -55,7 +55,7 @@ export class NotificationService {
         }
 
         const notificationPayload = JSON.stringify({
-          title: `Time to Hydrate, ${sub.user.name}! 💧`,
+          title: `${sub.user.name}, Time For Water! 💧`,
           body: 'Drink a glass of water now.',
           icon: '/icon.png',
           data: {
@@ -63,6 +63,7 @@ export class NotificationService {
             userId: sub.user.id,
           },
           actions: [
+            { action: 'drink-100', title: '💧 100ml' },
             { action: 'drink-250', title: '💧 250ml' },
             { action: 'drink-500', title: '💧 500ml' },
           ],
