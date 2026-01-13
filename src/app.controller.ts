@@ -314,6 +314,7 @@ export class AppController {
   @UseGuards(ApiKeyGuard)
   @UsePipes(new ValidationPipe())
   async logDrink(@Body() body: LogDrinkDto) {
+    console.log('Received log-drink body:', body);
     const user = await this.prisma.user.findUnique({
       where: { id: body.userId },
     });

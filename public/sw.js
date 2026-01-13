@@ -50,7 +50,7 @@ self.addEventListener('fetch', (event) => {
     url.pathname.endsWith('.webmanifest');
 
   // Network-First Strategy for Static Assets
-  if (isStaticAsset) {
+  if (isStaticAsset && url.protocol.startsWith('http')) {
     event.respondWith(
       fetch(event.request)
         .then((response) => {
@@ -95,9 +95,12 @@ self.addEventListener('push', function (event) {
 self.addEventListener('notificationclick', function (event) {
   event.notification.close();
 
+  console.log('Notification action:', event.action);
+
   // User clicked "I Drank It"
   if (event.action && event.action.startsWith('drink-')) {
     const amount = parseInt(event.action.split('-')[1], 10);
+    console.log('Parsed amount:', amount);
     const { secret, userId } = event.notification.data;
 
     const promiseChain = fetch('/log-drink', {

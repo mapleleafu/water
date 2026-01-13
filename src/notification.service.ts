@@ -65,7 +65,6 @@ export class NotificationService {
           actions: [
             { action: 'drink-100', title: '💧 100ml' },
             { action: 'drink-250', title: '💧 250ml' },
-            { action: 'drink-500', title: '💧 500ml' },
           ],
         });
 
